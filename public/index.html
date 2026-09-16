@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AUREX Live | Real-Time Battle & 13 Category Trivia</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Socket.io Client library -->
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- Canvas Confetti Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+
+  <!-- Background Animated Blobs -->
+  <div class="bg-glow-container">
+    <div class="glow-blob blob-1"></div>
+    <div class="glow-blob blob-2"></div>
+    <div class="glow-blob blob-3"></div>
+  </div>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="brand-logo">
+      <span class="brand-icon">⚡</span>
+      <span>AUREX <small style="font-size:0.6em; opacity:0.75; color: var(--accent-cyan);">PRO</small></span>
+    </div>
+
+    <div class="header-controls">
+      <div class="status-badge" id="server-status">
+        <div class="status-dot"></div>
+        <span id="status-text">Connected</span>
+      </div>
+
+      <button class="btn-icon-glass" id="btn-sound-toggle" title="Toggle Sound">
+        🔊
+      </button>
+
+      <button class="btn-icon-glass" id="btn-admin-open" title="Admin Question Panel">
+        ⚙️
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container">
+
+    <!-- VIEW 1: HERO / LANDING SCREEN -->
+    <section class="view-section active" id="view-hero">
+      <div class="glass-card">
+        <h1 class="hero-title">Real-Time Category <br><span class="hero-gradient">Trivia Battle Arena</span></h1>
+        <p class="hero-subtitle">Host rooms, invite players, select from 13+ specialized trivia categories, and fight for the top podium spot!</p>
+
+        <!-- Live Stats Ticker -->
+        <div class="hero-stats-bar">
+          <div class="stat-pill"><span class="stat-icon">🎯</span> <span id="stat-total-categories">13</span> Categories</div>
+          <div class="stat-pill"><span class="stat-icon">📚</span> <span id="stat-total-questions">80+</span> Questions</div>
+          <div class="stat-pill"><span class="stat-icon">⚡</span> Real-Time Multiplayer</div>
+        </div>
+
+        <div class="action-grid">
+          <!-- Create Room Card -->
+          <div class="action-card" id="card-create-room">
+            <div class="action-icon">🎮</div>
+            <h3>Create Battle Room</h3>
+            <p>Host a custom quiz room, filter 13 categories, customize question count & speed timers.</p>
+          </div>
+
+          <!-- Join Room Card -->
+          <div class="action-card" id="card-join-room-trigger">
+            <div class="action-icon">🚀</div>
+            <h3>Join Game Lobby</h3>
+            <p>Enter a 6-character room code from your host and jump directly into the live battle lobby!</p>
+          </div>
+        </div>
+
+        <!-- Join Room Direct Form -->
+        <div class="join-box glass-card" style="padding: 1.5rem; display: none;" id="box-join-form">
+          <h4 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Join Multiplayer Room</h4>
+          <input type="text" class="input-styled" id="input-nickname" placeholder="Enter your Nickname" maxlength="15">
+          <input type="text" class="input-styled" id="input-room-code" placeholder="Enter 6-Character Room Code (e.g. AB12CD)" style="text-transform: uppercase;" maxlength="6">
+          <div style="display: flex; gap: 0.75rem;">
+            <button class="btn-primary" id="btn-join-submit">Join Lobby Now</button>
+            <button class="btn-secondary" id="btn-join-cancel">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Solo Practice CTA -->
+        <div style="text-align: center; margin-top: 1.5rem; margin-bottom: 2rem;">
+          <button class="btn-secondary" id="btn-solo-practice" style="border-radius: var(--radius-full); padding: 0.9rem 2rem; font-weight: 700;">
+            🎯 Solo Practice Mode (All Categories)
+          </button>
+        </div>
+
+        <!-- Interactive Category Showcase Grid -->
+        <div class="category-showcase-header">
+          <h3>Explore 13 Trivia Categories</h3>
+          <p>Click any category card to launch a quick solo test or preview question counts</p>
+        </div>
+
+        <div class="hero-category-grid" id="hero-category-grid">
+          <!-- Dynamically populated category cards -->
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: LOBBY SCREEN -->
+    <section class="view-section" id="view-lobby">
+      <div class="glass-card">
+        <div class="lobby-header">
+          <p style="color: var(--text-muted); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px;">Room Lobby Code</p>
+          <div class="room-code-badge">
+            <span id="display-room-code">------</span>
+            <button class="copy-btn" id="btn-copy-code" title="Copy Code">COPY</button>
+          </div>
+          <p style="margin-top: 0.75rem; color: var(--text-muted);" id="lobby-status-msg">Waiting for host to start the battle...</p>
+        </div>
+
+        <!-- Connected Players -->
+        <h4 style="font-size: 1.1rem; margin-bottom: 1rem;">Connected Players (<span id="player-count">0</span>)</h4>
+        <div class="players-grid" id="players-list-container">
+          <!-- Dynamically filled with player cards -->
+        </div>
+
+        <!-- Settings Summary -->
+        <div style="background: rgba(255,255,255,0.04); padding: 1.25rem 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-glass); margin-bottom: 2rem;">
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem; font-size: 0.95rem;">
+            <div><strong>Categories:</strong> <span id="summary-categories" style="color: var(--accent-cyan); font-weight: 600;">General Knowledge</span></div>
+            <div><strong>Questions:</strong> <span id="summary-count" style="color: var(--primary-glow); font-weight: 700;">10</span></div>
+            <div><strong>Timer:</strong> <span id="summary-timer" style="color: var(--accent-amber); font-weight: 700;">15s</span></div>
+            <div><strong>Difficulty:</strong> <span id="summary-difficulty" style="color: var(--accent-green); font-weight: 600;">Mixed</span></div>
+          </div>
+        </div>
+
+        <!-- Host Action Button -->
+        <div style="display: flex; justify-content: space-between; gap: 1rem;">
+          <button class="btn-secondary" id="btn-leave-lobby">Leave Lobby</button>
+          <button class="btn-primary" id="btn-start-game" style="display: none;">🚀 START GAME NOW</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: GAME ARENA SCREEN -->
+    <section class="view-section" id="view-game">
+      <div class="glass-card">
+        <!-- Arena Header -->
+        <div class="arena-header">
+          <div class="quiz-meta-pill">
+            <span class="meta-badge" id="badge-question-num">Q 1 / 10</span>
+            <span class="meta-badge category-badge-dynamic" id="badge-category">🧠 General Knowledge</span>
+            <span class="meta-badge streak-badge-dynamic" id="badge-streak">🔥 Streak 0</span>
+          </div>
+
+          <!-- Timer Radial Widget -->
+          <div class="timer-radial-container">
+            <svg class="timer-svg" viewBox="0 0 90 90">
+              <circle class="timer-circle-bg" cx="45" cy="45" r="40"></circle>
+              <circle class="timer-circle-progress" id="timer-progress-ring" cx="45" cy="45" r="40"></circle>
+            </svg>
+            <div class="timer-text" id="timer-seconds-text">15</div>
+          </div>
+        </div>
+
+        <!-- Question Track Progress Bar -->
+        <div class="question-progress-track">
+          <div class="question-progress-bar" id="question-progress-bar" style="width: 10%;"></div>
+        </div>
+
+        <!-- Question Banner -->
+        <div class="question-banner">
+          <h2 class="question-text" id="display-question-text">Loading trivia question...</h2>
+        </div>
+
+        <!-- 4 Option Cards -->
+        <div class="options-grid" id="options-container">
+          <div class="option-card" data-index="0">
+            <div class="option-key">1</div>
+            <div class="option-text">Option A</div>
+            <span class="kbd-hint">Press 1</span>
+          </div>
+          <div class="option-card" data-index="1">
+            <div class="option-key">2</div>
+            <div class="option-text">Option B</div>
+            <span class="kbd-hint">Press 2</span>
+          </div>
+          <div class="option-card" data-index="2">
+            <div class="option-key">3</div>
+            <div class="option-text">Option C</div>
+            <span class="kbd-hint">Press 3</span>
+          </div>
+          <div class="option-card" data-index="3">
+            <div class="option-key">4</div>
+            <div class="option-text">Option D</div>
+            <span class="kbd-hint">Press 4</span>
+          </div>
+        </div>
+
+        <!-- Quick Floating Reaction Tray -->
+        <div class="reaction-tray">
+          <button class="reaction-btn" data-emoji="🔥">🔥</button>
+          <button class="reaction-btn" data-emoji="👏">👏</button>
+          <button class="reaction-btn" data-emoji="🧠">🧠</button>
+          <button class="reaction-btn" data-emoji="🚀">🚀</button>
+          <button class="reaction-btn" data-emoji="😱">😱</button>
+          <button class="reaction-btn" data-emoji="🎉">🎉</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: ANSWER REVEAL VIEW -->
+    <section class="view-section" id="view-reveal">
+      <div class="glass-card" style="text-align: center;">
+        <div id="reveal-status-icon" style="font-size: 3.5rem; margin-bottom: 0.5rem;">🎉</div>
+        <h2 id="reveal-status-title" style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;">Correct Answer!</h2>
+        <p id="reveal-points-text" style="color: var(--accent-green); font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">+950 Points</p>
+        <p id="reveal-speed-info" style="color: var(--accent-cyan); font-size: 1rem; font-weight: 600; margin-bottom: 1.5rem;">⏱️ Response Time: 1.8s</p>
+
+        <div style="background: rgba(255, 255, 255, 0.05); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-glass); margin-bottom: 1.5rem;">
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.35rem;">Correct Solution:</p>
+          <h3 id="display-correct-answer" style="color: var(--accent-green); font-size: 1.35rem;">Option Text</h3>
+        </div>
+
+        <p style="color: var(--text-dim); font-size: 0.9rem;">Next round launching in <span id="reveal-countdown">4</span>s...</p>
+      </div>
+    </section>
+
+    <!-- VIEW 5: VICTORY PODIUM & END SCREEN -->
+    <section class="view-section" id="view-end">
+      <div class="glass-card">
+        <h1 style="text-align: center; font-size: 2.25rem; font-weight: 800;" class="hero-gradient">Game Over & Victory Podium</h1>
+        <p style="text-align: center; color: var(--text-muted); margin-bottom: 1.5rem;">Ranked by Score, Total Time & Response Speed!</p>
+
+        <!-- 1st Rank Champion Reward Card -->
+        <div class="champion-reward-card" id="champion-reward-card">
+          <div class="champion-badge-emblem">
+            <div class="badge-shield">🏆</div>
+            <div class="badge-ribbon">CHAMPION</div>
+          </div>
+          <div class="reward-info">
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <span class="reward-tag">🏆 1st RANK CHAMPION BADGE REWARD</span>
+              <span class="badge-title-pill">👑 TRIVIA TITAN</span>
+            </div>
+            <h2 class="reward-winner-name" id="reward-winner-name">Winner Nickname</h2>
+            <p class="reward-desc" id="reward-desc">Awarded the Official 1st Rank Champion Badge & Gold Crown for dominating the battle arena with high speed & precision!</p>
+            <div class="reward-badges-row">
+              <span class="reward-badge-pill gold" id="reward-badge-score">🥇 0 Final Points</span>
+              <span class="reward-badge-pill cyan" id="reward-badge-time">⚡ 0.0s Total Speed</span>
+              <span class="reward-badge-pill green" id="reward-badge-accuracy">🎯 100% Accuracy</span>
+              <span class="reward-badge-pill purple">🎖️ Champion Badge Unlocked</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Podium Display -->
+        <div class="podium-container" id="podium-wrapper">
+          <!-- 2nd Place -->
+          <div class="podium-step podium-2" id="podium-step-2">
+            <div class="podium-avatar" id="podium-avatar-2">2</div>
+            <div class="podium-rank">2nd</div>
+            <div style="font-weight: 700; margin-top: 0.5rem;" id="podium-name-2">Player 2</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);" id="podium-score-2">0 pts</div>
+            <div style="font-size: 0.8rem; color: var(--accent-cyan); font-weight: 600; margin-top: 0.2rem;" id="podium-time-2">⏱️ Total: 0.0s</div>
+          </div>
+
+          <!-- 1st Place -->
+          <div class="podium-step podium-1" id="podium-step-1">
+            <div class="podium-avatar" id="podium-avatar-1">👑</div>
+            <div class="podium-rank">1st</div>
+            <div style="font-weight: 800; margin-top: 0.5rem;" id="podium-name-1">Winner</div>
+            <div style="font-size: 0.95rem; color: var(--accent-amber); font-weight: 700;" id="podium-score-1">0 pts</div>
+            <div style="font-size: 0.85rem; color: var(--accent-cyan); font-weight: 700; margin-top: 0.2rem;" id="podium-time-1">⏱️ Total: 0.0s</div>
+          </div>
+
+          <!-- 3rd Place -->
+          <div class="podium-step podium-3" id="podium-step-3">
+            <div class="podium-avatar" id="podium-avatar-3">3</div>
+            <div class="podium-rank">3rd</div>
+            <div style="font-weight: 700; margin-top: 0.5rem;" id="podium-name-3">Player 3</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);" id="podium-score-3">0 pts</div>
+            <div style="font-size: 0.8rem; color: var(--accent-cyan); font-weight: 600; margin-top: 0.2rem;" id="podium-time-3">⏱️ Total: 0.0s</div>
+          </div>
+        </div>
+
+        <!-- Full Leaderboard Table (All Participants) -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 2rem 0 1rem 0;">
+          <h3 style="font-size: 1.25rem; font-weight: 700;">Full Room Leaderboard (<span id="total-participants-count">0</span> Participants)</h3>
+          <span style="font-size: 0.85rem; color: var(--text-muted);">Includes all players in room</span>
+        </div>
+        <div style="background: rgba(255,255,255,0.03); border-radius: var(--radius-md); border: 1px solid var(--border-glass); overflow: hidden; margin-bottom: 2rem;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;" id="table-final-leaderboard">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border-glass); background: rgba(255,255,255,0.05); color: var(--text-muted); font-size: 0.85rem;">
+                <th style="padding: 0.85rem 1rem;">RANK</th>
+                <th style="padding: 0.85rem 1rem;">PLAYER</th>
+                <th style="padding: 0.85rem 1rem;">ACCURACY</th>
+                <th style="padding: 0.85rem 1rem;">TOTAL TIME</th>
+                <th style="padding: 0.85rem 1rem;">AVG SPEED</th>
+                <th style="padding: 0.85rem 1rem;">FINAL SCORE</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-final-leaderboard">
+              <!-- Rows inserted dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+          <button class="btn-primary" id="btn-play-again" style="display: none;">🔄 Play Again</button>
+          <button class="btn-secondary" id="btn-return-lobby">🏠 Return to Main Lobby</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: HOST ROOM SETTINGS -->
+  <div class="modal-overlay" id="modal-host-settings">
+    <div class="modal-content" style="max-width: 720px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Host Room Configuration</h2>
+        <button class="btn-icon-glass" id="btn-close-host-modal">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Host Nickname</label>
+        <input type="text" class="input-styled" id="host-nickname-input" placeholder="Your Host Nickname" maxlength="15" value="QuizHost">
+      </div>
+
+      <!-- Enhanced Category Picker -->
+      <div class="form-group">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem;">
+          <label class="form-label" style="margin-bottom: 0;">Select Quiz Categories (<span id="category-selected-count">13</span> Selected)</label>
+          <div style="display: flex; gap: 0.5rem;">
+            <button type="button" class="btn-sm-action" id="btn-cat-select-all">Select All</button>
+            <button type="button" class="btn-sm-action" id="btn-cat-clear-all">Clear All</button>
+          </div>
+        </div>
+
+        <!-- Category Topic Quick Presets -->
+        <div class="preset-pills" id="category-presets-container">
+          <button type="button" class="preset-chip" data-preset="all">🌟 All Categories</button>
+          <button type="button" class="preset-chip" data-preset="tech">💻 Tech & Science</button>
+          <button type="button" class="preset-chip" data-preset="pop">🎬 Pop Culture & Entertainment</button>
+          <button type="button" class="preset-chip" data-preset="sports">🏏 Sports & News</button>
+          <button type="button" class="preset-chip" data-preset="academic">🏛️ History & World</button>
+        </div>
+
+        <!-- Search Bar -->
+        <div style="margin: 0.75rem 0;">
+          <input type="text" class="input-styled" id="input-category-search" placeholder="🔍 Search categories..." style="font-size: 0.9rem; padding: 0.6rem 1rem;">
+        </div>
+
+        <!-- Interactive Category Grid -->
+        <div class="modal-category-grid" id="modal-category-grid">
+          <!-- Dynamically inserted multi-select cards -->
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Number of Questions</label>
+        <div class="chips-select" id="host-count-chips">
+          <div class="chip" data-value="5">5 Questions</div>
+          <div class="chip selected" data-value="10">10 Questions</div>
+          <div class="chip" data-value="15">15 Questions</div>
+          <div class="chip" data-value="20">20 Questions</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Timer Per Question</label>
+        <div class="chips-select" id="host-timer-chips">
+          <div class="chip" data-value="10">10 Seconds (Fast)</div>
+          <div class="chip selected" data-value="15">15 Seconds (Standard)</div>
+          <div class="chip" data-value="25">25 Seconds (Relaxed)</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Question Difficulty</label>
+        <div class="chips-select" id="host-diff-chips">
+          <div class="chip selected" data-value="all">Mixed</div>
+          <div class="chip" data-value="easy">Easy</div>
+          <div class="chip" data-value="medium">Medium</div>
+          <div class="chip" data-value="hard">Hard</div>
+        </div>
+      </div>
+
+      <div class="pool-summary-badge" id="pool-summary-badge">
+        ✨ Selected categories contain <strong id="matching-questions-count">80+</strong> total trivia questions in room bank.
+      </div>
+
+      <button class="btn-primary" id="btn-create-lobby-confirm" style="margin-top: 1rem;">Create Room Lobby Now</button>
+    </div>
+  </div>
+
+  <!-- MODAL: ADMIN & QUESTION MANAGEMENT -->
+  <div class="modal-overlay" id="modal-admin">
+    <div class="modal-content" style="max-width: 650px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Admin Question Management</h2>
+        <button class="btn-icon-glass" id="btn-close-admin-modal">✕</button>
+      </div>
+
+      <!-- Refresh Daily News API Trigger -->
+      <div style="background: rgba(6, 182, 212, 0.15); border: 1px solid var(--accent-cyan); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+        <div>
+          <h4 style="color: var(--accent-cyan); font-weight: 700; margin-bottom: 0.25rem;">Daily News Auto-Refresh</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Pull latest top news headlines and convert into daily current affairs trivia.</p>
+        </div>
+        <button class="btn-primary" id="btn-trigger-news" style="white-space: nowrap; width: auto; padding: 0.6rem 1rem; font-size: 0.9rem;">
+          📰 Refresh News API
+        </button>
+      </div>
+
+      <!-- Add New Question Form -->
+      <h4 style="font-size: 1.1rem; margin-bottom: 1rem;">Add Custom Question</h4>
+      <form id="form-admin-add-question">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="input-styled" id="admin-category-select">
+            <!-- Dynamically populated options -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Question Text</label>
+          <input type="text" class="input-styled" id="admin-qtext" placeholder="Enter question..." required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+          <input type="text" class="input-styled" id="admin-opt0" placeholder="Option 1" required>
+          <input type="text" class="input-styled" id="admin-opt1" placeholder="Option 2" required>
+          <input type="text" class="input-styled" id="admin-opt2" placeholder="Option 3" required>
+          <input type="text" class="input-styled" id="admin-opt3" placeholder="Option 4" required>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+          <div style="flex: 1;">
+            <label class="form-label">Correct Option Index (0-3)</label>
+            <select class="input-styled" id="admin-correct-select">
+              <option value="0">Option 1</option>
+              <option value="1">Option 2</option>
+              <option value="2">Option 3</option>
+              <option value="3">Option 4</option>
+            </select>
+          </div>
+          <div style="flex: 1;">
+            <label class="form-label">Difficulty</label>
+            <select class="input-styled" id="admin-diff-select">
+              <option value="easy">Easy</option>
+              <option value="medium" selected>Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary">➕ Save Question to Database</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Audio Synthesizer Script -->
+  <script src="audio.js"></script>
+  <!-- Main Application Logic Script -->
+  <script src="app.js"></script>
+</body>
+</html>
