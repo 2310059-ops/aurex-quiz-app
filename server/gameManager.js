@@ -13,7 +13,7 @@ function generateRoomCode() {
 }
 
 class RoomState {
-  constructor(roomCode, hostSocketId, hostNickname, settings) {
+  constructor(roomCode, hostSocketId, hostNickname, settings, hostAvatar = '🦊', hostTitle = '⚡ Speed Demon') {
     this.roomCode = roomCode;
     this.hostSocketId = hostSocketId;
     this.settings = {
@@ -32,13 +32,15 @@ class RoomState {
     this.answersReceived = new Map();
     this.questionHistory = [];
 
-    this.addPlayer(hostSocketId, hostNickname, true);
+    this.addPlayer(hostSocketId, hostNickname, true, hostAvatar, hostTitle);
   }
 
-  addPlayer(socketId, nickname, isHost = false) {
+  addPlayer(socketId, nickname, isHost = false, avatar = '🦊', titleBadge = '⚡ Speed Demon') {
     const player = {
       socketId,
       nickname,
+      avatar: avatar || '🦊',
+      titleBadge: titleBadge || '⚡ Speed Demon',
       score: 0,
       streak: 0,
       isHost,
@@ -66,6 +68,8 @@ class RoomState {
     return Array.from(this.players.values()).map(p => ({
       socketId: p.socketId,
       nickname: p.nickname,
+      avatar: p.avatar || '🦊',
+      titleBadge: p.titleBadge || '⚡ Speed Demon',
       score: p.score,
       streak: p.streak,
       isHost: p.isHost,
@@ -87,13 +91,13 @@ class RoomState {
   }
 }
 
-async function createRoom(socketId, nickname, settings) {
+async function createRoom(socketId, nickname, settings, avatar = '🦊', titleBadge = '⚡ Speed Demon') {
   let roomCode = generateRoomCode();
   while (activeRooms.has(roomCode)) {
     roomCode = generateRoomCode();
   }
 
-  const room = new RoomState(roomCode, socketId, nickname, settings);
+  const room = new RoomState(roomCode, socketId, nickname, settings, avatar, titleBadge);
   activeRooms.set(roomCode, room);
 
   try {
@@ -123,6 +127,10 @@ function getRoom(roomCode) {
 async function prepareQuestions(room) {
   const { categories, questionCount, difficulty } = room.settings;
   
+  if (!room.playedQuestionIds) {
+    room.playedQuestionIds = new Set();
+  }
+
   let sql = 'SELECT * FROM questions';
   const params = [];
   const conditions = [];
@@ -138,6 +146,15 @@ async function prepareQuestions(room) {
     params.push(difficulty);
   }
 
+  if (room.playedQuestionIds.size > 0) {
+    const excludedIds = Array.from(room.playedQuestionIds);
+    // Limit exclusion array length to prevent giant SQL parameter lists
+    const recentExcluded = excludedIds.slice(-2000);
+    const exPlaceholders = recentExcluded.map(() => '?').join(',');
+    conditions.push(`id NOT IN (${exPlaceholders})`);
+    params.push(...recentExcluded);
+  }
+
   if (conditions.length > 0) {
     sql += ' WHERE ' + conditions.join(' AND ');
   }
@@ -148,8 +165,12 @@ async function prepareQuestions(room) {
   let fetchedQuestions = await allQuery(sql, params);
 
   if (fetchedQuestions.length < questionCount) {
+    // Fallback if room played all category questions
     fetchedQuestions = await allQuery('SELECT * FROM questions ORDER BY RANDOM() LIMIT ?', [questionCount]);
   }
+
+  // Record fetched IDs into room played history
+  fetchedQuestions.forEach(q => room.playedQuestionIds.add(q.id));
 
   room.questions = fetchedQuestions.map(q => ({
     id: q.id,

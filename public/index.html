@@ -62,14 +62,14 @@
 
         <div class="action-grid">
           <!-- Create Room Card -->
-          <div class="action-card" id="card-create-room">
+          <div class="action-card" id="card-create-room" style="cursor: pointer;">
             <div class="action-icon">🎮</div>
             <h3>Create Battle Room</h3>
-            <p>Host a custom quiz room, filter 13 categories, customize question count & speed timers.</p>
+            <p>Host a custom quiz room, filter 17 categories, customize question count & speed timers.</p>
           </div>
 
           <!-- Join Room Card -->
-          <div class="action-card" id="card-join-room-trigger">
+          <div class="action-card" id="card-join-room-trigger" style="cursor: pointer;">
             <div class="action-icon">🚀</div>
             <h3>Join Game Lobby</h3>
             <p>Enter a 6-character room code from your host and jump directly into the live battle lobby!</p>
@@ -96,8 +96,17 @@
 
         <!-- Interactive Category Showcase Grid -->
         <div class="category-showcase-header">
-          <h3>Explore 13 Trivia Categories</h3>
-          <p>Click any category card to launch a quick solo test or preview question counts</p>
+          <h3>Explore 17 Trivia & Specialty Rounds</h3>
+          <p>Select a category domain to preview question banks or launch instant practice</p>
+
+          <!-- Category Filter Tabs -->
+          <div class="cat-filter-tabs" id="hero-cat-filter-tabs" style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem;">
+            <button class="cat-tab-btn active" data-group="all">✨ All (17 Rounds)</button>
+            <button class="cat-tab-btn" data-group="classics">🏛️ Classics</button>
+            <button class="cat-tab-btn" data-group="pop">🎬 Pop Culture</button>
+            <button class="cat-tab-btn" data-group="lifestyle">🍕 Lifestyle & Sports</button>
+            <button class="cat-tab-btn" data-group="creative">💡 Creative Rounds</button>
+          </div>
         </div>
 
         <div class="hero-category-grid" id="hero-category-grid">
@@ -152,6 +161,12 @@
             <span class="meta-badge category-badge-dynamic" id="badge-category">🧠 General Knowledge</span>
             <span class="meta-badge streak-badge-dynamic" id="badge-streak">🔥 Streak 0</span>
           </div>
+
+          <!-- Exit Quiz Button -->
+          <button class="btn-exit-quiz" id="btn-exit-quiz" title="Exit Quiz">
+            <span class="exit-icon">✕</span>
+            <span class="exit-label">Exit</span>
+          </button>
 
           <!-- Timer Radial Widget -->
           <div class="timer-radial-container">
@@ -308,9 +323,10 @@
         </div>
 
         <!-- Action Buttons -->
-        <div style="display: flex; gap: 1rem; justify-content: center;">
-          <button class="btn-primary" id="btn-play-again" style="display: none;">🔄 Play Again</button>
-          <button class="btn-secondary" id="btn-return-lobby">🏠 Return to Main Lobby</button>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+          <button class="btn-primary" id="btn-play-again" style="display: none;">⚡ Play Next Quiz (Refreshed Questions)</button>
+          <button class="btn-secondary" id="btn-change-lobby" style="display: none;">⚙️ Room Lobby & Settings</button>
+          <button class="btn-secondary" id="btn-return-lobby">🏠 Return to Home</button>
         </div>
       </div>
     </section>
@@ -460,6 +476,19 @@
 
         <button type="submit" class="btn-primary">➕ Save Question to Database</button>
       </form>
+    </div>
+  </div>
+
+  <!-- MODAL: EXIT QUIZ CONFIRMATION -->
+  <div class="modal-overlay" id="modal-exit-quiz">
+    <div class="modal-content exit-confirm-modal" style="max-width: 420px; text-align: center;">
+      <div class="exit-confirm-icon">🚪</div>
+      <h2 class="exit-confirm-title">Exit the Quiz?</h2>
+      <p class="exit-confirm-desc">Are you sure you want to leave? Your current progress and score will be lost.</p>
+      <div class="exit-confirm-actions">
+        <button class="btn-secondary" id="btn-exit-cancel">Stay in Game</button>
+        <button class="btn-exit-confirm" id="btn-exit-confirm">Yes, Exit Quiz</button>
+      </div>
     </div>
   </div>
 

@@ -1,11 +1,12 @@
 {
   "name": "aurex-quiz-app",
   "version": "1.0.0",
-  "description": "AUREX - Real-time multiplayer trivia & battle app with Socket.io, Express, SQLite, and 14,000+ questions.",
+  "description": "AUREX - Real-time multiplayer trivia & battle app with Socket.io, Express, SQLite, and 100,000+ questions.",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
-    "dev": "node server/index.js"
+    "dev": "node server/index.js",
+    "seed:100k": "node -e \"(async () => { await require('./server/db').initDatabase(); await require('./server/bulkQuestionGenerator').generate100kQuestions(); process.exit(0); })()\""
   },
   "dependencies": {
     "axios": "^1.7.9",

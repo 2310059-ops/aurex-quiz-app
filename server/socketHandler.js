@@ -19,15 +19,15 @@ function initSocketHandlers(io) {
     // Create Room
     socket.on('create_room', async (data, callback) => {
       try {
-        const { nickname, settings } = data || {};
+        const { nickname, settings, avatar, titleBadge } = data || {};
         if (!nickname) {
           return callback && callback({ error: 'Nickname is required' });
         }
 
-        const room = await createRoom(socket.id, nickname.trim(), settings || {});
+        const room = await createRoom(socket.id, nickname.trim(), settings || {}, avatar || '🦊', titleBadge || '⚡ Speed Demon');
         socket.join(room.roomCode);
 
-        console.log(`[Socket] Room created: ${room.roomCode} by ${nickname}`);
+        console.log(`[Socket] Room created: ${room.roomCode} by ${nickname} (${avatar || '🦊'})`);
 
         const responseData = {
           roomCode: room.roomCode,
@@ -46,7 +46,7 @@ function initSocketHandlers(io) {
     // Join Room
     socket.on('join_room', (data, callback) => {
       try {
-        const { roomCode, nickname } = data || {};
+        const { roomCode, nickname, avatar, titleBadge } = data || {};
         if (!roomCode || !nickname) {
           return callback && callback({ error: 'Room code and nickname are required' });
         }
@@ -60,7 +60,7 @@ function initSocketHandlers(io) {
           return callback && callback({ error: 'Game is already in progress in this room.' });
         }
 
-        const player = room.addPlayer(socket.id, nickname.trim(), false);
+        const player = room.addPlayer(socket.id, nickname.trim(), false, avatar || '🦊', titleBadge || '⚡ Speed Demon');
         socket.join(room.roomCode);
 
         console.log(`[Socket] Player ${nickname} joined room ${room.roomCode}`);
@@ -123,17 +123,28 @@ function initSocketHandlers(io) {
       if (callback) callback({ success: !!result, data: result });
     });
 
-    // Play Again / Replay
-    socket.on('play_again', (data) => {
-      const { roomCode } = data || {};
+    // Play Again / Replay with Refreshed Questions
+    socket.on('play_again', async (data) => {
+      const { roomCode, startImmediately } = data || {};
       const room = getRoom(roomCode);
 
       if (room && room.hostSocketId === socket.id) {
         resetRoomToLobby(roomCode);
-        io.to(room.roomCode).emit('returned_to_lobby', {
-          players: room.getPlayersList(),
-          settings: room.settings
-        });
+        if (startImmediately) {
+          const started = await startGame(roomCode, io);
+          if (!started) {
+            io.to(room.roomCode).emit('returned_to_lobby', {
+              players: room.getPlayersList(),
+              settings: room.settings,
+              error: 'Could not prepare new questions.'
+            });
+          }
+        } else {
+          io.to(room.roomCode).emit('returned_to_lobby', {
+            players: room.getPlayersList(),
+            settings: room.settings
+          });
+        }
       }
     });
 

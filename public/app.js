@@ -3,28 +3,35 @@ document.addEventListener('DOMContentLoaded', () => {
   const socket = io();
 
   const CATEGORY_META = {
-    'General Knowledge': { icon: '🧠', color: '#818cf8', bg: 'rgba(99, 102, 241, 0.2)', preset: 'academic' },
-    'Cricket & Sports': { icon: '🏏', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.2)', preset: 'sports' },
-    'Daily News & World Affairs': { icon: '📰', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.2)', preset: 'sports' },
-    'Movies & Entertainment': { icon: '🎬', color: '#ec4899', bg: 'rgba(236, 72, 153, 0.2)', preset: 'pop' },
-    'Tech & AI': { icon: '💻', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.2)', preset: 'tech' },
-    'Space & Astronomy': { icon: '🚀', color: '#a855f7', bg: 'rgba(168, 85, 247, 0.2)', preset: 'tech' },
-    'Science & Nature': { icon: '🧬', color: '#10b981', bg: 'rgba(16, 185, 129, 0.2)', preset: 'tech' },
-    'History & Civilizations': { icon: '🏛️', color: '#eab308', bg: 'rgba(234, 179, 8, 0.2)', preset: 'academic' },
-    'Geography & Wonders': { icon: '🌍', color: '#14b8a6', bg: 'rgba(20, 184, 166, 0.2)', preset: 'academic' },
-    'Music & Pop Culture': { icon: '🎵', color: '#f43f5e', bg: 'rgba(244, 63, 94, 0.2)', preset: 'pop' },
-    'Food & Global Cuisine': { icon: '🍕', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.2)', preset: 'pop' },
-    'Gaming & Esports': { icon: '🎮', color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.2)', preset: 'pop' },
-    'Mythology & Literature': { icon: '📚', color: '#6366f1', bg: 'rgba(99, 102, 241, 0.2)', preset: 'academic' }
+    'General Knowledge': { icon: '🧠', color: '#818cf8', bg: 'rgba(99, 102, 241, 0.2)', group: 'classics' },
+    'Geography & Wonders': { icon: '🌍', color: '#14b8a6', bg: 'rgba(20, 184, 166, 0.2)', group: 'classics' },
+    'History & Civilizations': { icon: '🏛️', color: '#eab308', bg: 'rgba(234, 179, 8, 0.2)', group: 'classics' },
+    'Science & Nature': { icon: '🧬', color: '#10b981', bg: 'rgba(16, 185, 129, 0.2)', group: 'classics' },
+    'Literature & Art': { icon: '🎨', color: '#a855f7', bg: 'rgba(168, 85, 247, 0.2)', group: 'classics' },
+    'Space & Astronomy': { icon: '🚀', color: '#6366f1', bg: 'rgba(99, 102, 241, 0.2)', group: 'classics' },
+    'Daily News & World Affairs': { icon: '📰', color: '#0284c7', bg: 'rgba(2, 132, 199, 0.2)', group: 'classics' },
+    'Movies & Entertainment': { icon: '🎬', color: '#ec4899', bg: 'rgba(236, 72, 153, 0.2)', group: 'pop' },
+    'Music & Audio Trivia': { icon: '🎵', color: '#f43f5e', bg: 'rgba(244, 63, 94, 0.2)', group: 'pop' },
+    'Gaming & Tech': { icon: '🎮', color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.2)', group: 'pop' },
+    'Celebrity & Media': { icon: '🌟', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.2)', group: 'pop' },
+    'Food & Drink': { icon: '🍕', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.2)', group: 'lifestyle' },
+    'Cricket & Sports': { icon: '🏏', color: '#f97316', bg: 'rgba(249, 115, 22, 0.2)', group: 'lifestyle' },
+    'Brands & Business': { icon: '💼', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.2)', group: 'lifestyle' },
+    'Decades Trivia (80s, 90s, 2000s)': { icon: '🕹️', color: '#d946ef', bg: 'rgba(217, 70, 239, 0.2)', group: 'creative' },
+    'Connections Round': { icon: '🔗', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.2)', group: 'creative' },
+    'True or False / Mythbusters': { icon: '🔍', color: '#10b981', bg: 'rgba(16, 185, 129, 0.2)', group: 'creative' },
+    'Picture & Visual Round': { icon: '🖼️', color: '#84cc16', bg: 'rgba(132, 204, 22, 0.2)', group: 'creative' }
   };
 
   function getCatMeta(catName) {
-    return CATEGORY_META[catName] || { icon: '💡', color: '#818cf8', bg: 'rgba(99, 102, 241, 0.2)', preset: 'academic' };
+    return CATEGORY_META[catName] || { icon: '💡', color: '#818cf8', bg: 'rgba(99, 102, 241, 0.2)', group: 'classics' };
   }
 
   const state = {
     roomCode: null,
     nickname: 'Player',
+    avatar: '🦊',
+    titleBadge: '⚡ Speed Demon',
     isHost: false,
     categoriesData: [],
     selectedCategories: [],
@@ -97,13 +104,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function renderHeroCategoryGrid(categories) {
+  let currentActiveGroup = 'all';
+
+  function renderHeroCategoryGrid(categories, activeGroup = 'all') {
     const grid = document.getElementById('hero-category-grid');
     if (!grid) return;
     grid.innerHTML = '';
 
     categories.forEach(item => {
       const meta = getCatMeta(item.category);
+      if (activeGroup !== 'all' && meta.group !== activeGroup) {
+        return;
+      }
+
       const card = document.createElement('div');
       card.className = 'hero-cat-card';
       card.style.setProperty('--cat-color', meta.color);
@@ -115,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <span class="hero-cat-badge">${item.count} Qs</span>
         </div>
         <div class="hero-cat-name">${escapeHtml(item.category)}</div>
-        <div class="hero-cat-btn">Play Category Practice ➔</div>
+        <div class="hero-cat-btn">Play Practice Round ➔</div>
       `;
 
       card.addEventListener('click', () => {
@@ -126,6 +139,16 @@ document.addEventListener('DOMContentLoaded', () => {
       grid.appendChild(card);
     });
   }
+
+  document.querySelectorAll('#hero-cat-filter-tabs .cat-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      window.soundFx.playSelect();
+      document.querySelectorAll('#hero-cat-filter-tabs .cat-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentActiveGroup = btn.dataset.group;
+      renderHeroCategoryGrid(state.categoriesData, currentActiveGroup);
+    });
+  });
 
   function renderModalCategoryGrid(categories, filterQuery = '') {
     const grid = document.getElementById('modal-category-grid');
@@ -269,22 +292,28 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnJoinSubmit = document.getElementById('btn-join-submit');
   const btnJoinCancel = document.getElementById('btn-join-cancel');
 
-  cardCreateRoom.addEventListener('click', () => {
-    window.soundFx.playSelect();
-    modalHost.classList.add('active');
-  });
+  if (cardCreateRoom) {
+    cardCreateRoom.addEventListener('click', () => {
+      window.soundFx.playSelect();
+      if (modalHost) modalHost.classList.add('active');
+    });
+  }
 
-  cardJoinTrigger.addEventListener('click', () => {
-    window.soundFx.playSelect();
-    boxJoinForm.style.display = 'flex';
-  });
+  if (cardJoinTrigger) {
+    cardJoinTrigger.addEventListener('click', () => {
+      window.soundFx.playSelect();
+      if (boxJoinForm) boxJoinForm.style.display = 'block';
+    });
+  }
 
-  btnJoinCancel.addEventListener('click', () => {
-    boxJoinForm.style.display = 'none';
-  });
+  if (btnJoinCancel) {
+    btnJoinCancel.addEventListener('click', () => {
+      boxJoinForm.style.display = 'none';
+    });
+  }
 
   btnJoinSubmit.addEventListener('click', () => {
-    const nickname = document.getElementById('input-nickname').value.trim();
+    const nickname = document.getElementById('input-nickname').value.trim() || state.nickname;
     const roomCode = document.getElementById('input-room-code').value.trim().toUpperCase();
 
     if (!nickname || !roomCode) {
@@ -295,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.nickname = nickname;
     window.soundFx.playSelect();
 
-    socket.emit('join_room', { roomCode, nickname }, (response) => {
+    socket.emit('join_room', { roomCode, nickname, avatar: state.avatar, titleBadge: state.titleBadge }, (response) => {
       if (response.error) {
         alert(response.error);
       } else if (response.success) {
@@ -338,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupChips('host-diff-chips', false);
 
   document.getElementById('btn-create-lobby-confirm').addEventListener('click', () => {
-    const nickname = document.getElementById('host-nickname-input').value.trim() || 'QuizHost';
+    const nickname = document.getElementById('host-nickname-input').value.trim() || state.nickname || 'QuizHost';
     state.nickname = nickname;
 
     const countChip = document.querySelector('#host-count-chips .chip.selected');
@@ -354,7 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.soundFx.playSelect();
 
-    socket.emit('create_room', { nickname, settings }, (response) => {
+    socket.emit('create_room', { nickname, settings, avatar: state.avatar, titleBadge: state.titleBadge }, (response) => {
       modalHost.classList.remove('active');
       if (response.error) {
         alert(response.error);
@@ -391,12 +420,14 @@ document.addEventListener('DOMContentLoaded', () => {
     players.forEach(p => {
       const card = document.createElement('div');
       card.className = 'player-card';
-      const initial = p.nickname.charAt(0).toUpperCase();
 
       card.innerHTML = `
-        <div class="player-avatar">${initial}</div>
+        <div class="player-avatar" style="font-size: 1.6rem; display: flex; align-items: center; justify-content: center;">${p.avatar || '🦊'}</div>
         <div class="player-info">
-          <div class="player-name">${escapeHtml(p.nickname)}</div>
+          <div class="player-name" style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
+            <span>${escapeHtml(p.nickname)}</span>
+            <span class="badge-title-pill" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;">${p.titleBadge || '⚡ Speed Demon'}</span>
+          </div>
           ${p.isHost ? '<div class="host-tag">👑 ROOM HOST</div>' : '<div style="font-size: 0.75rem; color: var(--text-muted);">Player</div>'}
         </div>
       `;
@@ -508,8 +539,58 @@ document.addEventListener('DOMContentLoaded', () => {
         const idx = parseInt(e.key) - 1;
         submitAnswerChoice(idx);
       }
+      // Escape key opens exit confirmation
+      if (e.key === 'Escape') {
+        openExitModal();
+      }
     }
   });
+
+  // ── Exit Quiz Modal Logic ──────────────────────────────────────────
+  const modalExitQuiz = document.getElementById('modal-exit-quiz');
+  const btnExitQuiz   = document.getElementById('btn-exit-quiz');
+  const btnExitCancel = document.getElementById('btn-exit-cancel');
+  const btnExitConfirm = document.getElementById('btn-exit-confirm');
+
+  function openExitModal() {
+    if (modalExitQuiz) modalExitQuiz.classList.add('active');
+  }
+
+  function closeExitModal() {
+    if (modalExitQuiz) modalExitQuiz.classList.remove('active');
+  }
+
+  if (btnExitQuiz) {
+    btnExitQuiz.addEventListener('click', () => {
+      window.soundFx.playSelect();
+      openExitModal();
+    });
+  }
+
+  if (btnExitCancel) {
+    btnExitCancel.addEventListener('click', () => {
+      window.soundFx.playSelect();
+      closeExitModal();
+    });
+  }
+
+  if (btnExitConfirm) {
+    btnExitConfirm.addEventListener('click', () => {
+      window.soundFx.playSelect();
+      // Disconnect cleanly then reload to go back to home screen
+      socket.disconnect();
+      window.location.reload();
+    });
+  }
+
+  // Close exit modal if user clicks the dark backdrop
+  if (modalExitQuiz) {
+    modalExitQuiz.addEventListener('click', (e) => {
+      if (e.target === modalExitQuiz) closeExitModal();
+    });
+  }
+  // ───────────────────────────────────────────────────────────────────
+
 
   socket.on('timer_tick', (data) => {
     updateTimerProgress(data.timeRemaining, data.totalTime);
@@ -599,22 +680,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update 1st Rank Champion Reward Card Banner
     const rewardCard = document.getElementById('champion-reward-card');
     if (rewardCard) {
-      document.getElementById('reward-winner-name').textContent = p1.nickname;
+      document.getElementById('reward-winner-name').innerHTML = `${p1.avatar || '👑'} ${escapeHtml(p1.nickname)} <span class="badge-title-pill" style="font-size:0.75rem; vertical-align:middle; margin-left:0.5rem;">${p1.titleBadge || '👑 Trivia Titan'}</span>`;
       document.getElementById('reward-badge-score').textContent = `🏆 ${p1.score} Final Points`;
       document.getElementById('reward-badge-time').textContent = `⏱️ ${p1.totalTimeSec || '0.0'}s Total Speed`;
       document.getElementById('reward-badge-accuracy').textContent = `🎯 ${p1.accuracyPct || 0}% Accuracy (${p1.correctCount || 0}/${p1.totalAnswered || 0})`;
     }
 
     // Update Podium Steps
-    document.getElementById('podium-name-1').textContent = p1.nickname;
+    const podAvatar1 = document.getElementById('podium-avatar-1');
+    const podAvatar2 = document.getElementById('podium-avatar-2');
+    const podAvatar3 = document.getElementById('podium-avatar-3');
+    if (podAvatar1) podAvatar1.textContent = p1.avatar || '👑';
+    if (podAvatar2) podAvatar2.textContent = p2.avatar || '🥈';
+    if (podAvatar3) podAvatar3.textContent = p3.avatar || '🥉';
+
+    document.getElementById('podium-name-1').innerHTML = `<span>${escapeHtml(p1.nickname)}</span> <div style="font-size: 0.75rem; color: var(--accent-amber); font-weight: 700; margin-top: 0.15rem;">${p1.titleBadge || '👑 Trivia Titan'}</div>`;
     document.getElementById('podium-score-1').textContent = `${p1.score} pts`;
     document.getElementById('podium-time-1').textContent = `⏱️ Total: ${p1.totalTimeSec || '0.0'}s (${p1.avgResponseTimeSec || '0.0'}s/q)`;
 
-    document.getElementById('podium-name-2').textContent = p2.nickname;
+    document.getElementById('podium-name-2').innerHTML = `<span>${escapeHtml(p2.nickname)}</span> <div style="font-size: 0.75rem; color: var(--accent-cyan); font-weight: 600; margin-top: 0.15rem;">${p2.titleBadge || '⚡ Speed Demon'}</div>`;
     document.getElementById('podium-score-2').textContent = `${p2.score} pts`;
     document.getElementById('podium-time-2').textContent = `⏱️ Total: ${p2.totalTimeSec || '0.0'}s (${p2.avgResponseTimeSec || '0.0'}s/q)`;
 
-    document.getElementById('podium-name-3').textContent = p3.nickname;
+    document.getElementById('podium-name-3').innerHTML = `<span>${escapeHtml(p3.nickname)}</span> <div style="font-size: 0.75rem; color: var(--accent-green); font-weight: 600; margin-top: 0.15rem;">${p3.titleBadge || '🎯 Clutch Master'}</div>`;
     document.getElementById('podium-score-3').textContent = `${p3.score} pts`;
     document.getElementById('podium-time-3').textContent = `⏱️ Total: ${p3.totalTimeSec || '0.0'}s (${p3.avgResponseTimeSec || '0.0'}s/q)`;
 
@@ -635,7 +723,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       tr.innerHTML = `
         <td style="padding: 0.85rem 1rem; font-weight: 800; color: ${rank === 0 ? 'var(--accent-amber)' : 'var(--text-main)'}; font-size: 1.1rem;">${rankIcon}</td>
-        <td style="padding: 0.85rem 1rem; font-weight: 700;">${escapeHtml(player.nickname)} ${player.isHost ? '<span style="font-size:0.75rem; color:var(--accent-amber);">[HOST]</span>' : ''}</td>
+        <td style="padding: 0.85rem 1rem; font-weight: 700;">
+          <span style="font-size: 1.25rem; margin-right: 0.4rem; vertical-align: middle;">${player.avatar || '🦊'}</span>
+          <span style="vertical-align: middle;">${escapeHtml(player.nickname)}</span>
+          <span class="badge-title-pill" style="font-size: 0.7rem; padding: 0.15rem 0.4rem; margin-left: 0.35rem; vertical-align: middle;">${player.titleBadge || '⚡ Speed Demon'}</span>
+          ${player.isHost ? '<span style="font-size:0.75rem; color:var(--accent-amber); margin-left:0.25rem; vertical-align: middle;">[HOST]</span>' : ''}
+        </td>
         <td style="padding: 0.85rem 1rem; font-weight: 600; color: var(--accent-green);">🎯 ${player.accuracyPct || 0}% (${player.correctCount || 0}/${player.totalAnswered || 0})</td>
         <td style="padding: 0.85rem 1rem; font-weight: 700; color: var(--accent-cyan);">⏱️ ${player.totalTimeSec || '0.0'}s</td>
         <td style="padding: 0.85rem 1rem; font-weight: 600; color: var(--text-muted);">${player.avgResponseTimeSec || '0.0'}s / q</td>
@@ -645,12 +738,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const btnPlayAgain = document.getElementById('btn-play-again');
-    btnPlayAgain.style.display = state.isHost ? 'inline-flex' : 'none';
+    const btnChangeLobby = document.getElementById('btn-change-lobby');
+    if (btnPlayAgain) btnPlayAgain.style.display = (state.isHost || state.isSolo) ? 'inline-flex' : 'none';
+    if (btnChangeLobby) btnChangeLobby.style.display = (state.isHost && !state.isSolo) ? 'inline-flex' : 'none';
   });
 
-  document.getElementById('btn-play-again').addEventListener('click', () => {
-    socket.emit('play_again', { roomCode: state.roomCode });
-  });
+  const btnPlayAgainEl = document.getElementById('btn-play-again');
+  if (btnPlayAgainEl) {
+    btnPlayAgainEl.addEventListener('click', () => {
+      window.soundFx.playSelect();
+      if (state.isSolo) {
+        launchSoloPractice(state.selectedCategories.length > 0 ? state.selectedCategories : null);
+      } else {
+        socket.emit('play_again', { roomCode: state.roomCode, startImmediately: true });
+      }
+    });
+  }
+
+  const btnChangeLobbyEl = document.getElementById('btn-change-lobby');
+  if (btnChangeLobbyEl) {
+    btnChangeLobbyEl.addEventListener('click', () => {
+      window.soundFx.playSelect();
+      socket.emit('play_again', { roomCode: state.roomCode, startImmediately: false });
+    });
+  }
 
   socket.on('returned_to_lobby', (data) => {
     setupLobbyUI(data);

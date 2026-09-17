@@ -751,9 +751,100 @@ const initialQuestions = [
     difficulty: 'easy'
   },
   {
-    category: 'Mythology & Literature',
+    category: 'Literature & Art',
     question_text: 'Who is the author of the best-selling "Harry Potter" fantasy book series?',
     options: JSON.stringify(['Rick Riordan', 'J.K. Rowling', 'Suzanne Collins', 'Philip Pullman']),
+    correct_option: 1,
+    difficulty: 'easy'
+  },
+
+  // --- LITERATURE & ART ---
+  {
+    category: 'Literature & Art',
+    question_text: 'Which Renaissance artist painted the famous masterpiece "Mona Lisa" housed in the Louvre?',
+    options: JSON.stringify(['Michelangelo', 'Leonardo da Vinci', 'Raphael', 'Vincent van Gogh']),
+    correct_option: 1,
+    difficulty: 'easy'
+  },
+  {
+    category: 'Literature & Art',
+    question_text: 'Which Post-Impressionist painter created the famous masterpiece "The Starry Night"?',
+    options: JSON.stringify(['Claude Monet', 'Pablo Picasso', 'Vincent van Gogh', 'Salvador Dalí']),
+    correct_option: 2,
+    difficulty: 'easy'
+  },
+
+  // --- BRANDS & BUSINESS ---
+  {
+    category: 'Brands & Business',
+    question_text: 'Which iconic brand uses the famous tagline slogan "Just Do It"?',
+    options: JSON.stringify(['Adidas', 'Nike', 'Puma', 'Under Armour']),
+    correct_option: 1,
+    difficulty: 'easy'
+  },
+  {
+    category: 'Brands & Business',
+    question_text: 'Which tech giant was co-founded by Steve Jobs, Steve Wozniak, and Ronald Wayne in 1976?',
+    options: JSON.stringify(['Microsoft', 'Apple', 'IBM', 'Intel']),
+    correct_option: 1,
+    difficulty: 'easy'
+  },
+
+  // --- CELEBRITY & MEDIA ---
+  {
+    category: 'Celebrity & Media',
+    question_text: 'Which celebrity star host hosted "The Oprah Winfrey Show" for 25 seasons?',
+    options: JSON.stringify(['Ellen DeGeneres', 'Oprah Winfrey', 'Tyra Banks', 'Kelly Ripa']),
+    correct_option: 1,
+    difficulty: 'easy'
+  },
+
+  // --- DECADES TRIVIA (80s, 90s, 2000s) ---
+  {
+    category: 'Decades Trivia (80s, 90s, 2000s)',
+    question_text: '[90s Trivia] Which hit sitcom featured the characters Ross, Rachel, Monica, Chandler, Joey, and Phoebe?',
+    options: JSON.stringify(['Seinfeld', 'Friends', 'Frasier', 'Cheers']),
+    correct_option: 1,
+    difficulty: 'easy'
+  },
+  {
+    category: 'Decades Trivia (80s, 90s, 2000s)',
+    question_text: '[80s Trivia] Which portable audio cassette tape player was released by Sony in 1979 and exploded in popularity in the 1980s?',
+    options: JSON.stringify(['Discman', 'Walkman', 'iPod', 'Boombox']),
+    correct_option: 1,
+    difficulty: 'easy'
+  },
+
+  // --- CONNECTIONS ROUND ---
+  {
+    category: 'Connections Round',
+    question_text: '[Connections Round] Mercury, Venus, Earth, Mars, Jupiter: What is the hidden connection uniting these items?',
+    options: JSON.stringify(['Chemical Elements', 'Solar System Planets', 'Greek Gods', 'Roman Emperors']),
+    correct_option: 1,
+    difficulty: 'medium'
+  },
+
+  // --- TRUE OR FALSE / MYTHBUSTERS ---
+  {
+    category: 'True or False / Mythbusters',
+    question_text: 'Mythbusters Check: Is it True or False that Goldfish have a memory span of only 3 seconds?',
+    options: JSON.stringify(['True', 'False (They have months of memory)', 'True only for wild fish', 'True only in cold water']),
+    correct_option: 1,
+    difficulty: 'easy'
+  },
+  {
+    category: 'True or False / Mythbusters',
+    question_text: 'True or False: The Great Wall of China is clearly visible from space with the naked eye.',
+    options: JSON.stringify(['True', 'False (Common myth - not visible without lens magnification)', 'True in low orbit', 'True at night']),
+    correct_option: 1,
+    difficulty: 'easy'
+  },
+
+  // --- PICTURE & VISUAL ROUND ---
+  {
+    category: 'Picture & Visual Round',
+    question_text: '[Visual Poster Identification] Which iconic sci-fi movie poster features a yellow crawling opening crawl text over space?',
+    options: JSON.stringify(['Star Trek', 'Star Wars', '2001: A Space Odyssey', 'Interstellar']),
     correct_option: 1,
     difficulty: 'easy'
   }

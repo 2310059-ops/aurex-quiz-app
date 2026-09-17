@@ -7,6 +7,7 @@ require('dotenv').config();
 
 const { initDatabase, allQuery, runQuery, getQuery } = require('./db');
 const { seedQuestionsIfEmpty } = require('./questionsSeed');
+const { generate100kQuestions } = require('./bulkQuestionGenerator');
 const { fetchAndGenerateNewsQuestions, initNewsCronJob } = require('./newsService');
 const { initSocketHandlers } = require('./socketHandler');
 
@@ -80,6 +81,7 @@ async function startServer() {
   try {
     await initDatabase();
     await seedQuestionsIfEmpty();
+    generate100kQuestions().catch(err => console.error('Error generating 100k questions background job:', err));
     initNewsCronJob();
     initSocketHandlers(io);
 

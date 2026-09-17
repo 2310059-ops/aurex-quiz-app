@@ -63,7 +63,11 @@ function initDatabase() {
           question_id INTEGER NOT NULL,
           start_time DATETIME DEFAULT CURRENT_TIMESTAMP
         )
-      `, (err) => {
+      `);
+
+      // Indexes for fast lookup over 100,000+ records
+      db.run(`CREATE INDEX IF NOT EXISTS idx_questions_cat ON questions(category)`);
+      db.run(`CREATE INDEX IF NOT EXISTS idx_questions_cat_diff ON questions(category, difficulty)`, (err) => {
         if (err) reject(err);
         else resolve();
       });

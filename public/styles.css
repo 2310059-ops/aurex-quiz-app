@@ -1253,3 +1253,129 @@ body {
   .hero-category-grid { grid-template-columns: 1fr 1fr; }
 }
 
+/* ─── Exit Quiz Button ─────────────────────────────────────── */
+.btn-exit-quiz {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.95rem;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1.5px solid rgba(239, 68, 68, 0.35);
+  border-radius: var(--radius-full);
+  color: #fca5a5;
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast),
+              color var(--transition-fast), box-shadow var(--transition-fast),
+              transform var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.btn-exit-quiz:hover {
+  background: rgba(239, 68, 68, 0.28);
+  border-color: rgba(239, 68, 68, 0.75);
+  color: #fff;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-exit-quiz:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.btn-exit-quiz .exit-icon {
+  font-size: 1rem;
+  line-height: 1;
+  font-style: normal;
+}
+
+.btn-exit-quiz .exit-label {
+  text-transform: uppercase;
+}
+
+/* ─── Exit Confirmation Modal ──────────────────────────────── */
+.exit-confirm-modal {
+  padding: 2.5rem 2rem !important;
+  animation: exitModalIn 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes exitModalIn {
+  from { opacity: 0; transform: scale(0.88) translateY(24px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0); }
+}
+
+.exit-confirm-icon {
+  font-size: 3.25rem;
+  margin-bottom: 1rem;
+  animation: exitIconBounce 0.5s 0.1s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes exitIconBounce {
+  from { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+  to   { transform: scale(1)   rotate(0deg);  opacity: 1; }
+}
+
+.exit-confirm-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 0.65rem;
+}
+
+.exit-confirm-desc {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.exit-confirm-actions {
+  display: flex;
+  gap: 0.85rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-exit-confirm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.75rem 1.75rem;
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  border: none;
+  border-radius: var(--radius-full);
+  color: #fff;
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(239, 68, 68, 0.45);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast),
+              filter var(--transition-fast);
+}
+
+.btn-exit-confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(239, 68, 68, 0.6);
+  filter: brightness(1.1);
+}
+
+.btn-exit-confirm:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.4);
+}
+
+@media (max-width: 640px) {
+  .exit-confirm-actions { flex-direction: column; }
+  .exit-confirm-actions .btn-secondary,
+  .exit-confirm-actions .btn-exit-confirm { width: 100%; }
+  .btn-exit-quiz .exit-label { display: none; }
+  .btn-exit-quiz { padding: 0.45rem 0.65rem; }
+}
+
